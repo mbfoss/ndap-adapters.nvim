@@ -1,0 +1,44 @@
+-- Java: connects to the java-debug server running inside jdtls (the
+-- com.microsoft.java.debug plugin, loaded and started e.g. by nvim-jdtls); it
+-- starts nothing itself. Two distinct endpoints are in play: the DAP connection to that server, and the
+-- debuggee JVM's JDWP address, which com.microsoft.java.debug reads from the
+-- attach body as `hostName`/`port` (not `host`).
+
+---@type ndap.AdapterDef
+return {
+    modes = {
+        attach = {
+            description = "attach to an external java-debug server (e.g. via nvim-jdtls)",
+            request = "attach",
+            inputs = {
+                jdwp_host    = { type = "string", description = "JDWP host of the debuggee JVM" },
+                jdwp_port    = { type = "integer", required = true, description = "JDWP port of the debuggee JVM" },
+                server_host  = { type = "string", description = "host of the java-debug server (default 127.0.0.1)" },
+                server_port  = { type = "integer", required = true, description = "port the java-debug server listens on" },
+                project_name = { type = "string", description = "project name used to resolve sources" },
+                source_paths = { type = "list", completion = "dir", description = "extra source lookup paths" },
+                timeout      = { type = "integer", description = "attach timeout in milliseconds" },
+            },
+            -- Two host/port pairs, and they are not the same connection: the body's
+            -- names the JDWP port the debuggee exposes, the second return the
+            -- java-debug server ndap itself dials.
+            build = function(parameters)
+                local shared = require("ndap.shared")
+                local jdwp_port, err = shared.resolve_port(parameters.jdwp_port)
+                if err then return nil, err end
+                local server_port, server_err = shared.resolve_port(parameters.server_port)
+                if server_err then return nil, server_err end
+                return {
+                    hostName    = parameters.jdwp_host or "127.0.0.1",
+                    port        = jdwp_port,
+                    projectName = parameters.project_name,
+                    sourcePaths = shared.normalize_paths(parameters.source_paths),
+                    timeout     = parameters.timeout or 30000,
+                }, {
+                    host = parameters.server_host or "127.0.0.1",
+                    port = server_port,
+                }
+            end,
+        },
+    },
+}
