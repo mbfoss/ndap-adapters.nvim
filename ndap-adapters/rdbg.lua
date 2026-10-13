@@ -59,7 +59,7 @@ local function _spawn_rdbg(parameters, command_mode, config, ctx, callback)
     -- Everything past `--` is the debuggee, so an argument of its own that starts
     -- with a dash is never read as an rdbg flag.
     table.insert(cmd, "--")
-    local program, args = shared.split_command(parameters.command)
+    local program, args = parameters.command[1], vim.list_slice(parameters.command, 2)
     table.insert(cmd, program)
     vim.list_extend(cmd, args)
 
@@ -148,13 +148,13 @@ end
 
 ---@type table<string, ndap.Mode>
 local _modes = {
-    -- One `command` input carries the whole command line; `setup` starts it under
-    -- rdbg, which loads and stops it before we connect.
+    -- `command` is the debuggee's argv; `setup` starts it under rdbg, which loads
+    -- and stops it before we connect.
     script = {
         description = "debug a Ruby script",
         request = "attach",
         inputs = vim.tbl_extend("error", _common_inputs, _spawn_inputs, {
-            command = { type = "string", completion = "command", required = true, description = "Ruby script to debug, plus its arguments" },
+            command = { type = "list", completion = "file", required = true, description = "Ruby script to debug, plus its arguments" },
         }),
         build = _spawn_body,
     },
@@ -165,7 +165,7 @@ local _modes = {
         description = "debug a Ruby command - rspec, rake, ruby itself",
         request = "attach",
         inputs = vim.tbl_extend("error", _common_inputs, _spawn_inputs, {
-            command = { type = "string", completion = "command", required = true, description = "command to debug, plus its arguments" },
+            command = { type = "list", completion = "file", required = true, description = "command to debug, plus its arguments" },
         }),
         build = _spawn_body,
     },

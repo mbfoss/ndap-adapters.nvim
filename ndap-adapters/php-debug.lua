@@ -112,7 +112,7 @@ local _modes = {
         description = "run a PHP script under Xdebug",
         request = "launch",
         inputs = vim.tbl_extend("error", _common_inputs, {
-            command            = { type = "string", completion = "command", required = true, description = "script to debug, plus its arguments" },
+            command            = { type = "list", completion = "file", required = true, description = "script to debug, plus its arguments" },
             cwd                = { type = "string", completion = "dir", description = "working directory" },
             env                = { type = "map", description = "environment variables" },
             env_file           = { type = "string", completion = "file", description = "file of environment variable definitions" },
@@ -124,7 +124,7 @@ local _modes = {
             local shared = require("ndap.shared")
             local params, err = _common_body(parameters)
             if not params then return nil, err end
-            params.program, params.args = shared.split_command(parameters.command)
+            params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
             params.cwd               = shared.normalize_path(parameters.cwd)
             params.env               = parameters.env
             params.envFile           = shared.normalize_path(parameters.env_file)

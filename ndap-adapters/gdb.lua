@@ -97,13 +97,13 @@ return {
         callback()
     end,
     modes = {
-        -- One `command` input carries the whole command line; `build` splits it into
-        -- GDB's `program` (the first word) and `args` (the rest).
+        -- `command` is the debuggee's argv: GDB's `program` (its first entry) and
+        -- `args` (the rest).
         binary = {
             description = "debug a native executable",
             request = "launch",
             inputs = {
-                command       = { type = "string", completion = "command", required = true, description = "command line to debug" },
+                command       = { type = "list", completion = "file", required = true, description = "the program to debug, plus its arguments" },
                 cwd           = { type = "string", completion = "dir", description = "working directory" },
                 env           = { type = "map", description = "environment variables" },
                 stop_on_entry = { type = "boolean", description = "break at program entry" },
@@ -112,7 +112,7 @@ return {
             },
             build = function(parameters)
                 local shared = require("ndap.shared")
-                local program, args = shared.split_command(parameters.command)
+                local program, args = parameters.command[1], vim.list_slice(parameters.command, 2)
                 return {
                     program                         = program,
                     args                            = args,

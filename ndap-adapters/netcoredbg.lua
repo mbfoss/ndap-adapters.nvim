@@ -40,14 +40,14 @@ return {
         callback()
     end,
     modes = {
-        -- One `command` input carries the whole command line; `build` splits it into
-        -- `program` (the first word) and `args` (the rest). A `program` ending in
-        -- .dll is run by netcoredbg via `dotnet`; anything else runs as an executable.
+        -- `command` is the debuggee's argv: `program` (its first entry) and `args`
+        -- (the rest). A `program` ending in .dll is run by netcoredbg via `dotnet`;
+        -- anything else runs as an executable.
         binary = {
             description = "debug a .NET assembly",
             request = "launch",
             inputs = {
-                command               = { type = "string", completion = "command", required = true, description = "assembly or executable to debug, plus its arguments" },
+                command               = { type = "list", completion = "file", required = true, description = "assembly or executable to debug, plus its arguments" },
                 cwd                   = { type = "string", completion = "dir", description = "working directory" },
                 env                   = { type = "map", description = "environment variables" },
                 stop_at_entry         = { type = "boolean", description = "break at program entry" },
@@ -56,7 +56,7 @@ return {
             },
             build = function(parameters)
                 local shared = require("ndap.shared")
-                local program, args = shared.split_command(parameters.command)
+                local program, args = parameters.command[1], vim.list_slice(parameters.command, 2)
                 return {
                     program             = program,
                     args                = args,

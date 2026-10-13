@@ -70,23 +70,22 @@ end
 
 ---@type table<string, ndap.Mode>
 local _modes = {
-    -- One `command` input carries the whole command line; `build` splits it into
-    -- `program` (the first word) and `args` (the rest). The runtime is not part of
-    -- it - `command` starts at the script, and `runtime_executable` names the runtime.
+    -- `command` is the debuggee's argv: `program` (its first entry) and `args`
+    -- (the rest). The runtime is not part of it - `command` starts at the script,
+    -- and `runtime_executable` names the runtime.
     script = {
         description = "debug a Node.js/JS/TS file",
         request = "launch",
         inputs = vim.tbl_extend("error", _source_inputs, _node_inputs, {
-            command            = { type = "string", completion = "command", required = true, description = "script to debug, plus its arguments" },
+            command            = { type = "list", completion = "file", required = true, description = "script to debug, plus its arguments" },
             runtime_executable = { type = "string", description = "runtime to run the script with (default node)" },
             runtime_args       = { type = "list", description = "arguments passed to the runtime, before the program" },
             stop_on_entry      = { type = "boolean", description = "break at program entry" },
             console            = { type = "string", completion = { "internalConsole", "integratedTerminal", "externalTerminal" }, description = "where to run the debuggee" },
         }),
         build = function(parameters)
-            local shared = require("ndap.shared")
             local params = _node_body(parameters)
-            params.program, params.args = shared.split_command(parameters.command)
+            params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
             params.runtimeExecutable = parameters.runtime_executable
             params.runtimeArgs       = parameters.runtime_args
             params.stopOnEntry       = parameters.stop_on_entry

@@ -76,13 +76,13 @@ return {
         callback()
     end,
     modes = {
-        -- One `command` input carries the whole command line; `build` splits it into
-        -- `program` (the first word) and `args` (the rest).
+        -- `command` is the debuggee's argv: `program` (its first entry) and `args`
+        -- (the rest).
         binary = {
             description = "debug an executable",
             request = "launch",
             inputs = vim.tbl_extend("error", _common_inputs, {
-                command       = { type = "string", completion = "command", required = true, description = "command line to debug" },
+                command       = { type = "list", completion = "file", required = true, description = "the program to debug, plus its arguments" },
                 cwd           = { type = "string", completion = "dir", description = "working directory" },
                 env           = { type = "map", description = "environment variables, added to the inherited ones" },
                 env_file      = { type = "string", completion = "file", description = "file of additional environment variables" },
@@ -93,7 +93,7 @@ return {
             build = function(parameters)
                 local shared = require("ndap.shared")
                 local params = _common_body(parameters)
-                params.program, params.args = shared.split_command(parameters.command)
+                params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
                 params.cwd         = shared.normalize_path(parameters.cwd)
                 params.env         = parameters.env
                 params.envFile     = shared.normalize_path(parameters.env_file)

@@ -167,18 +167,17 @@ return {
     setup    = _debugpy_setup,
     teardown = function(_, state) if state and state.handle then state.handle.stop() end end,
     modes = {
-        -- One `command` input carries the whole command line; `build` splits it into
-        -- `program` (the first word) and `args` (the rest).
+        -- `command` is the debuggee's argv: `program` (its first entry) and `args`
+        -- (the rest).
         script = {
             description = "debug a Python file",
             request = "launch",
             inputs = vim.tbl_extend("error", _common_inputs, _launch_inputs, {
-                command = { type = "string", completion = "command", required = true, description = "command line to debug" },
+                command = { type = "list", completion = "file", required = true, description = "the program to debug, plus its arguments" },
             }),
             build = function(parameters)
-                local shared = require("ndap.shared")
                 local params = _launch_body(parameters)
-                params.program, params.args = shared.split_command(parameters.command)
+                params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
                 return params
             end,
         },

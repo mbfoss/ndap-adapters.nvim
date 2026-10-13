@@ -109,18 +109,16 @@ local function _tool_body(parameters)
     return params
 end
 
----The launch half shared by Dart and Flutter: one `command` input carries the
----whole command line, split into `program` (the entry point) and `args` (what it
----is run with). Flutter leaves `program` optional - without one the tool runs the
----project's own entry point - so an unset command assigns nothing rather than an
----empty program.
+---The launch half shared by Dart and Flutter: `command` is the debuggee's argv,
+---`program` its entry point and `args` what it is run with. Flutter leaves
+---`program` optional - without one the tool runs the project's own entry point -
+---so an unset command assigns nothing rather than an empty program.
 ---@param parameters table<string, any>
 ---@return table params
 local function _launch_body(parameters)
-    local shared = require("ndap.shared")
     local params = _tool_body(parameters)
     if parameters.command then
-        params.program, params.args = shared.split_command(parameters.command)
+        params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
     end
     params.noDebug = parameters.no_debug
     return params
@@ -135,7 +133,7 @@ local _modes = {
         description = "debug a Dart program",
         request = "launch",
         inputs = vim.tbl_extend("error", _common_inputs, _tool_inputs, {
-            command            = { type = "string", completion = "command", required = true, description = "Dart entry point to debug, plus its arguments" },
+            command            = { type = "list", completion = "file", required = true, description = "Dart entry point to debug, plus its arguments" },
             no_debug           = { type = "boolean", description = "run the program without debugging it" },
             vm_additional_args = { type = "list", description = "arguments passed straight to the Dart VM, before the tool's own" },
             vm_service_port    = { type = "integer", description = "fixed port for the debuggee's VM Service" },
@@ -158,7 +156,7 @@ local _modes = {
         description = "debug a Dart test suite",
         request = "launch",
         inputs = vim.tbl_extend("error", _common_inputs, _tool_inputs, {
-            command            = { type = "string", completion = "command", required = true, description = "test file to debug, plus its arguments" },
+            command            = { type = "list", completion = "file", required = true, description = "test file to debug, plus its arguments" },
             no_debug           = { type = "boolean", description = "run the tests without debugging them" },
             vm_additional_args = { type = "list", description = "arguments passed straight to the Dart VM, before the tool's own" },
             console            = { type = "string", completion = { "internalConsole", "terminal", "externalTerminal" }, description = "where the tests run; a terminal is what gives them stdin" },
@@ -192,7 +190,7 @@ local _modes = {
         description = "debug a Flutter app on a device",
         request = "launch",
         inputs = vim.tbl_extend("error", _common_inputs, _tool_inputs, {
-            command  = { type = "string", completion = "command", required = false, description = "entry point to debug, plus its arguments (default: the project's own)" },
+            command  = { type = "list", completion = "file", required = false, description = "entry point to debug, plus its arguments (default: the project's own)" },
             no_debug = { type = "boolean", description = "run the app without debugging it" },
         }),
         build = _launch_body,
@@ -201,7 +199,7 @@ local _modes = {
         description = "debug a Flutter test suite",
         request = "launch",
         inputs = vim.tbl_extend("error", _common_inputs, _tool_inputs, {
-            command  = { type = "string", completion = "command", required = false, description = "test file to debug, plus its arguments (default: every test)" },
+            command  = { type = "list", completion = "file", required = false, description = "test file to debug, plus its arguments (default: every test)" },
             no_debug = { type = "boolean", description = "run the tests without debugging them" },
         }),
         build = _launch_body,

@@ -90,7 +90,7 @@ local _any_mode_inputs = {
 ---Fields every mode that runs a process accepts (`exec`, and so `debug`/`test`).
 ---@type table<string, ndap.Input>
 local _process_inputs = {
-    command  = { type = "string", completion = "command", required = true, description = "command line to debug (package or binary, plus args)" },
+    command  = { type = "list", completion = "file", required = true, description = "the package or binary to debug, plus its args" },
     cwd      = { type = "string", completion = "dir", description = "working directory for the debuggee" },
     backend  = { type = "string", completion = { "default", "native", "lldb", "rr" }, description = "debugger backend" },
     no_debug = { type = "boolean", description = "run the program without debugging it" },
@@ -134,7 +134,7 @@ end
 local function _process_body(parameters)
     local shared = require("ndap.shared")
     local params = _any_mode_body(parameters)
-    params.program, params.args = shared.split_command(parameters.command)
+    params.program, params.args = parameters.command[1], vim.list_slice(parameters.command, 2)
     params.cwd                  = shared.normalize_path(parameters.cwd)
     params.backend              = parameters.backend
     params.noDebug              = parameters.no_debug
