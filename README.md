@@ -60,9 +60,10 @@ or any other plugin manager. Then:
 :Ndap adapter_info debugpy
 
 " one-off session: adapter, mode, and the mode's inputs as --name value
-" (`command` is argv: every token after it is another one of its entries, and
-" the next --flag ends it)
+" (`command` is argv: every token after it is another of its entries, up to the
+" next input name; a bare -- marks one token as a value, however it is spelled)
 :Ndap run debugpy script --command ./main.py arg1 arg2
+:Ndap run rdbg command --command ./app --rdbg_args -- --session-name=api
 
 " or create a reusable run file for it
 :Ndap new_run_file debugpy script
