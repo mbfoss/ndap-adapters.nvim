@@ -47,10 +47,17 @@ with [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
   "mbfoss/ndap.nvim",
   dependencies = { "mbfoss/ndap-adapters.nvim" },
+  lazy = false,
+  opts = {},
 }
 ```
 
-or any other plugin manager. Then:
+As a dependency it needs nothing of its own: it has no command and no setup
+call, and ndap finds its adapter files once it is loaded. Listed on its own
+instead, give it `lazy = false` too, so those files are there when ndap looks
+for them.
+
+Any other plugin manager works too. Then:
 
 ```vim
 " check Neovim version, setup and project state
